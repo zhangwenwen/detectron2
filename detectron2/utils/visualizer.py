@@ -37,7 +37,8 @@ class ColorMode(Enum):
 
     Attributes:
         IMAGE: Picks a random color for every instance and overlay segmentations with low opacity.
-        SEGMENTATION: Let instances of the same category have similar colors, and overlay them with
+        SEGMENTATION: Let instances of the same category have similar colors
+            (from metadata.thing_colors), and overlay them with
             high opacity. This provides more attention on the quality of segmentation.
         IMAGE_BW: same as IMAGE, but convert all areas without masks to gray-scale.
             Only available for drawing per-instance mask predictions.
@@ -110,6 +111,7 @@ class GenericMask:
         # hierarchy. External contours (boundary) of the object are placed in hierarchy-1.
         # Internal contours (holes) are placed in hierarchy-2.
         # cv2.CHAIN_APPROX_NONE flag gets vertices of polygons from contours.
+        mask = np.ascontiguousarray(mask)  # some versions of cv2 does not support incontiguous arr
         res = cv2.findContours(mask.astype("uint8"), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
         hierarchy = res[-1]
         if hierarchy is None:  # empty mask
@@ -251,7 +253,7 @@ class VisImage:
             filepath (str): a string that contains the absolute path, including the file name, where
                 the visualized image will be saved.
         """
-        if filepath.endswith(".jpg") or filepath.endswith(".png"):
+        if filepath.lower().endswith(".jpg") or filepath.lower().endswith(".png"):
             # faster than matplotlib's imshow
             cv2.imwrite(filepath, self.get_image()[:, :, ::-1])
         else:
